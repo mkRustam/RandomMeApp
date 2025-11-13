@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">RandomUserApp</string>
+
+    <string-array name="genders">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+
+    <string-array name="nationalities">
+        <item>AU</item>
+        <item>BR</item>
+        <item>CA</item>
+        <item>CH</item>
+        <item>DE</item>
+        <item>DK</item>
+        <item>ES</item>
+        <item>FI</item>
+        <item>FR</item>
+        <item>GB</item>
+        <item>IE</item>
+        <item>IN</item>
+        <item>IR</item>
+        <item>MX</item>
+        <item>NL</item>
+        <item>NO</item>
+        <item>NZ</item>
+        <item>RS</item>
+        <item>TR</item>
+        <item>UA</item>
+        <item>US</item>
+    </string-array>
+</resources>
