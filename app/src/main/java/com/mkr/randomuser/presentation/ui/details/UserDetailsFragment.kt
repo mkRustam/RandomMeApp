@@ -4,14 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
+import com.mkr.randomuser.R
 import com.mkr.randomuser.domain.model.User
 import com.mkr.randomuser.databinding.FragmentUserDetailsBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,7 +26,7 @@ class UserDetailsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: UserDetailsViewModel by viewModels()
-    private val args: UserDetailsFragmentArgs by navArgs()
+    private var tabMediator: TabLayoutMediator? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,8 +40,6 @@ class UserDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.loadUser(args.userId)
-
         observeViewModel()
         setupViewPager()
     }
@@ -47,9 +47,18 @@ class UserDetailsFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.user.collect { user ->
-                    user?.let {
-                        bindUserData(it)
+                viewModel.uiState.collect { state ->
+                    binding.progressBar.isVisible = state.isLoading
+                    val user = state.user
+                    binding.userName.isVisible = user != null
+                    binding.tabLayout.isVisible = user != null
+                    binding.viewPager.isVisible = user != null
+                    if (user != null) {
+                        bindUserData(user)
+                    }
+                    state.errorMessage?.let { message ->
+                        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+                        viewModel.consumeError()
                     }
                 }
             }
@@ -57,17 +66,16 @@ class UserDetailsFragment : Fragment() {
     }
 
     private fun setupViewPager() {
-        val adapter = UserDetailsPagerAdapter(this)
-        binding.viewPager.adapter = adapter
+        binding.viewPager.adapter = UserDetailsPagerAdapter(this)
 
-        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
+        tabMediator = TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             tab.text = when (position) {
-                0 -> "Personal"
-                1 -> "Location"
-                2 -> "Login"
+                0 -> getString(R.string.tab_personal)
+                1 -> getString(R.string.tab_location)
+                2 -> getString(R.string.tab_login)
                 else -> null
             }
-        }.attach()
+        }.apply { attach() }
     }
 
     private fun bindUserData(user: User) {
@@ -75,11 +83,13 @@ class UserDetailsFragment : Fragment() {
             .load(user.picture.large)
             .circleCrop()
             .into(binding.userImage)
-        binding.userName.text = "${user.name.first} ${user.name.last}"
+        binding.userName.text = getString(R.string.details_full_name, user.name.first, user.name.last)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        tabMediator?.detach()
+        tabMediator = null
         _binding = null
     }
 }

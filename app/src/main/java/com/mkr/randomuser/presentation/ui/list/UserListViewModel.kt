@@ -7,8 +7,9 @@ import com.mkr.randomuser.domain.usecase.GetSavedUsersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,21 +18,45 @@ class UserListViewModel @Inject constructor(
     private val getSavedUsersUseCase: GetSavedUsersUseCase
 ) : ViewModel() {
 
-    private val _users = MutableStateFlow<List<User>>(emptyList())
-    val users: StateFlow<List<User>> = _users
+    private val _uiState = MutableStateFlow(UserListUiState())
+    val uiState: StateFlow<UserListUiState> = _uiState.asStateFlow()
 
     init {
-        getSavedUsers()
+        observeUsers()
     }
 
-    private fun getSavedUsers() {
+    private fun observeUsers() {
         viewModelScope.launch {
-            try {
-                val users = getSavedUsersUseCase()
-                _users.value = users
-            } catch (e: Exception) {
-                // handle error
-            }
+            getSavedUsersUseCase()
+                .catch { throwable ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = throwable.message ?: "Unable to load users"
+                        )
+                    }
+                }
+                .collect { users ->
+                    _uiState.update {
+                        it.copy(
+                            users = users,
+                            isLoading = false,
+                            isEmpty = users.isEmpty(),
+                            errorMessage = null
+                        )
+                    }
+                }
         }
     }
+
+    fun consumeError() {
+        _uiState.update { it.copy(errorMessage = null) }
+    }
 }
+
+data class UserListUiState(
+    val users: List<User> = emptyList(),
+    val isLoading: Boolean = true,
+    val isEmpty: Boolean = false,
+    val errorMessage: String? = null
+)

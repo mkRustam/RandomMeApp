@@ -3,23 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/userListFragment">
+    app:startDestination="@id/mainFragment">
 
     <fragment
         android:id="@+id/mainFragment"
         android:name="com.mkr.randomuser.presentation.ui.main.MainFragment"
-        android:label="Generate User" >
+        android:label="@string/content_create_user" >
         <action
             android:id="@+id/action_mainFragment_to_userListFragment"
-            app:destination="@id/userListFragment"
-            app:popUpTo="@id/userListFragment"
-            app:popUpToInclusive="true" />
+            app:destination="@id/userListFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/userDetailsFragment"
         android:name="com.mkr.randomuser.presentation.ui.details.UserDetailsFragment"
-        android:label="User Details" >
+        android:label="@string/content_user_details" >
         <argument
             android:name="userId"
             app:argType="integer" />
@@ -28,7 +26,7 @@
     <fragment
         android:id="@+id/userListFragment"
         android:name="com.mkr.randomuser.presentation.ui.list.UserListFragment"
-        android:label="Users" >
+        android:label="@string/content_users" >
         <action
             android:id="@+id/action_userListFragment_to_userDetailsFragment"
             app:destination="@id/userDetailsFragment" />

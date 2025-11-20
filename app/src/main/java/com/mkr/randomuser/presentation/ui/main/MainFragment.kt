@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -13,6 +12,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import com.mkr.randomuser.R
 import com.mkr.randomuser.databinding.FragmentMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -70,18 +70,22 @@ class MainFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.navigateToUserList.collect {
-                        findNavController().navigate(MainFragmentDirections.actionMainFragmentToUserListFragment())
+                    viewModel.uiState.collect { state ->
+                        binding.progressBar.isVisible = state.isLoading
+                        binding.generateUserButton.isEnabled = !state.isLoading
+                        state.errorMessage?.let { message ->
+                            Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+                            viewModel.consumeError()
+                        }
                     }
                 }
                 launch {
-                    viewModel.error.collect { error ->
-                        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
-                    }
-                }
-                launch {
-                    viewModel.loading.collect { isLoading ->
-                        binding.progressBar.isVisible = isLoading
+                    viewModel.events.collect { event ->
+                        when (event) {
+                            MainEvent.NavigateToUserList -> {
+                                findNavController().navigate(MainFragmentDirections.actionMainFragmentToUserListFragment())
+                            }
+                        }
                     }
                 }
             }

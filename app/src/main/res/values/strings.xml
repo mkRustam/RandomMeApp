@@ -1,5 +1,32 @@
 <resources>
     <string name="app_name">RandomUserApp</string>
+    <string name="label_select_gender">Select gender:</string>
+    <string name="label_select_nationality">Select nationality:</string>
+    <string name="action_generate_user">Generate user</string>
+    <string name="text_no_users">No users found</string>
+    <string name="details_email">Email: %1$s</string>
+    <string name="details_phone">Phone: %1$s</string>
+    <string name="details_cell">Cell: %1$s</string>
+    <string name="details_birthday">Birthday: %1$s (%2$d years old)</string>
+    <string name="details_nationality">Nationality: %1$s</string>
+    <string name="details_street">Street: %1$d %2$s</string>
+    <string name="details_city">City: %1$s</string>
+    <string name="details_state">State: %1$s</string>
+    <string name="details_country">Country: %1$s</string>
+    <string name="details_postcode">Postcode: %1$s</string>
+    <string name="details_username">Username: %1$s</string>
+    <string name="details_password">Password: %1$s</string>
+    <string name="details_full_name">%1$s %2$s</string>
+    <string name="error_generic">Something went wrong</string>
+    <string name="error_empty_gender">Please select a gender</string>
+    <string name="error_empty_nationality">Please select a nationality</string>
+    <string name="content_create_user">Create user</string>
+    <string name="content_users">Users</string>
+    <string name="content_user_details">User details</string>
+    <string name="hint_loading">Loading…</string>
+    <string name="tab_personal">Personal</string>
+    <string name="tab_location">Location</string>
+    <string name="tab_login">Login</string>
 
     <string-array name="genders">
         <item>Male</item>

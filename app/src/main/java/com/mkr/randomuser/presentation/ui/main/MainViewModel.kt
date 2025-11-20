@@ -2,13 +2,14 @@ package com.mkr.randomuser.presentation.ui.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mkr.randomuser.domain.model.User
+import com.mkr.randomuser.core.common.Resource
 import com.mkr.randomuser.domain.usecase.GetRandomUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,26 +18,39 @@ class MainViewModel @Inject constructor(
     private val getRandomUserUseCase: GetRandomUserUseCase
 ) : ViewModel() {
 
-    private val _navigateToUserList = MutableSharedFlow<Unit>()
-    val navigateToUserList = _navigateToUserList.asSharedFlow()
+    private val _uiState = MutableStateFlow(MainUiState())
+    val uiState = _uiState.asStateFlow()
 
-    private val _error = MutableSharedFlow<String>()
-    val error = _error.asSharedFlow()
-
-    private val _loading = MutableStateFlow(false)
-    val loading = _loading.asStateFlow()
+    private val _events = Channel<MainEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     fun onGenerateUserClicked(gender: String, nat: String) {
         viewModelScope.launch {
-            _loading.value = true
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                getRandomUserUseCase(gender, nat)
-                _navigateToUserList.emit(Unit)
-            } catch (e: Exception) {
-                _error.emit(e.message ?: "An unknown error occurred")
+                when (val result = getRandomUserUseCase(gender, nat)) {
+                    is Resource.Success -> _events.send(MainEvent.NavigateToUserList)
+                    is Resource.Error -> _uiState.update {
+                        it.copy(errorMessage = result.message.ifBlank { "Something went wrong" })
+                    }
+                    Resource.Loading -> Unit
+                }
             } finally {
-                _loading.value = false
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
+
+    fun consumeError() {
+        _uiState.update { it.copy(errorMessage = null) }
+    }
+}
+
+data class MainUiState(
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
+
+sealed interface MainEvent {
+    data object NavigateToUserList : MainEvent
 }

@@ -1,5 +1,6 @@
 package com.mkr.randomuser.di
 
+import com.mkr.randomuser.core.coroutines.DispatcherProvider
 import com.mkr.randomuser.data.local.UserDao
 import com.mkr.randomuser.data.remote.ApiService
 import com.mkr.randomuser.data.repository.UserRepositoryImpl
@@ -16,7 +17,11 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideUserRepository(apiService: ApiService, userDao: UserDao): UserRepository {
-        return UserRepositoryImpl(apiService, userDao)
+    fun provideUserRepository(
+        apiService: ApiService,
+        userDao: UserDao,
+        dispatcherProvider: DispatcherProvider
+    ): UserRepository {
+        return UserRepositoryImpl(apiService, userDao, dispatcherProvider)
     }
 }

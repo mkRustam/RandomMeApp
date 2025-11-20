@@ -1,5 +1,6 @@
 package com.mkr.randomuser.data.remote.dto
 
-data class ApiResponceDto(
+data class ApiResponseDto(
     val results: List<UserDto>
 )
+

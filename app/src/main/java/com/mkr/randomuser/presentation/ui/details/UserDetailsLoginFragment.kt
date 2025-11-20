@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.mkr.randomuser.R
 import com.mkr.randomuser.databinding.FragmentUserDetailsLoginBinding
 import kotlinx.coroutines.launch
 
@@ -33,10 +34,12 @@ class UserDetailsLoginFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.user.collect { user ->
-                    user?.let {
-                        binding.usernameTextView.text = "Username: ${it.login.username}"
-                        binding.passwordTextView.text = "Password: ${it.login.password}"
+                viewModel.uiState.collect { state ->
+                    state.user?.login?.let {
+                        binding.usernameTextView.text =
+                            getString(R.string.details_username, it.username)
+                        binding.passwordTextView.text =
+                            getString(R.string.details_password, it.password)
                     }
                 }
             }
