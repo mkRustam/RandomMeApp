@@ -12,7 +12,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.snackbar.Snackbar
 import com.mkr.randomuser.R
 import com.mkr.randomuser.databinding.FragmentMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -73,10 +72,6 @@ class MainFragment : Fragment() {
                     viewModel.uiState.collect { state ->
                         binding.progressBar.isVisible = state.isLoading
                         binding.generateUserButton.isEnabled = !state.isLoading
-                        state.errorMessage?.let { message ->
-                            Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
-                            viewModel.consumeError()
-                        }
                     }
                 }
                 launch {

@@ -12,7 +12,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.snackbar.Snackbar
 import com.mkr.randomuser.databinding.FragmentUserListBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -65,11 +64,6 @@ class UserListFragment : Fragment() {
                     binding.emptyListTextView.isVisible = state.isEmpty && !state.isLoading
                     binding.usersRecyclerView.isVisible = state.users.isNotEmpty()
                     userAdapter.submitList(state.users)
-
-                    state.errorMessage?.let {
-                        Snackbar.make(binding.root, it, Snackbar.LENGTH_SHORT).show()
-                        viewModel.consumeError()
-                    }
                 }
             }
         }

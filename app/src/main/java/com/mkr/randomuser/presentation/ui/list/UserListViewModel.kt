@@ -2,6 +2,8 @@ package com.mkr.randomuser.presentation.ui.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mkr.randomuser.core.error.ErrorContext
+import com.mkr.randomuser.core.error.ErrorHandler
 import com.mkr.randomuser.domain.model.User
 import com.mkr.randomuser.domain.usecase.GetSavedUsersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UserListViewModel @Inject constructor(
-    private val getSavedUsersUseCase: GetSavedUsersUseCase
+    private val getSavedUsersUseCase: GetSavedUsersUseCase,
+    private val errorHandler: ErrorHandler
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UserListUiState())
@@ -26,14 +29,12 @@ class UserListViewModel @Inject constructor(
     }
 
     private fun observeUsers() {
-        viewModelScope.launch {
+        viewModelScope.launch(errorHandler.exceptionHandler) {
             getSavedUsersUseCase()
                 .catch { throwable ->
+                    errorHandler.handleError(throwable, ErrorContext.LOADING_USERS)
                     _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = throwable.message ?: "Unable to load users"
-                        )
+                        it.copy(isLoading = false)
                     }
                 }
                 .collect { users ->
@@ -41,22 +42,16 @@ class UserListViewModel @Inject constructor(
                         it.copy(
                             users = users,
                             isLoading = false,
-                            isEmpty = users.isEmpty(),
-                            errorMessage = null
+                            isEmpty = users.isEmpty()
                         )
                     }
                 }
         }
-    }
-
-    fun consumeError() {
-        _uiState.update { it.copy(errorMessage = null) }
     }
 }
 
 data class UserListUiState(
     val users: List<User> = emptyList(),
     val isLoading: Boolean = true,
-    val isEmpty: Boolean = false,
-    val errorMessage: String? = null
+    val isEmpty: Boolean = false
 )

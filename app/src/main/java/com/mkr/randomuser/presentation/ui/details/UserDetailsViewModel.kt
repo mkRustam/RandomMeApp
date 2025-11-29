@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mkr.randomuser.core.common.Resource
+import com.mkr.randomuser.core.error.ErrorContext
+import com.mkr.randomuser.core.error.ErrorHandler
 import com.mkr.randomuser.domain.model.User
 import com.mkr.randomuser.domain.usecase.GetUserByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class UserDetailsViewModel @Inject constructor(
     private val getUserByIdUseCase: GetUserByIdUseCase,
+    private val errorHandler: ErrorHandler,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -30,27 +33,29 @@ class UserDetailsViewModel @Inject constructor(
     }
 
     private fun loadUser() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (val result = getUserByIdUseCase(userId)) {
-                is Resource.Success -> _uiState.update {
-                    it.copy(isLoading = false, user = result.data, errorMessage = null)
+        viewModelScope.launch(errorHandler.exceptionHandler) {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                when (val result = getUserByIdUseCase(userId)) {
+                    is Resource.Success -> _uiState.update {
+                        it.copy(isLoading = false, user = result.data)
+                    }
+                    is Resource.Error -> {
+                        val errorMessage = result.message.ifBlank { ErrorContext.LOADING_USER_DETAILS }
+                        errorHandler.handleError(errorMessage)
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
+                    Resource.Loading -> Unit
                 }
-                is Resource.Error -> _uiState.update {
-                    it.copy(isLoading = false, errorMessage = result.message.ifBlank { "Unable to load user" })
-                }
-                Resource.Loading -> Unit
+            } catch (e: Exception) {
+                errorHandler.handleError(e, ErrorContext.LOADING_USER_DETAILS)
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
-    }
-
-    fun consumeError() {
-        _uiState.update { it.copy(errorMessage = null) }
     }
 }
 
 data class UserDetailsUiState(
     val user: User? = null,
-    val isLoading: Boolean = true,
-    val errorMessage: String? = null
+    val isLoading: Boolean = true
 )

@@ -11,7 +11,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
-import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
 import com.mkr.randomuser.R
 import com.mkr.randomuser.domain.model.User
@@ -55,10 +54,6 @@ class UserDetailsFragment : Fragment() {
                     binding.viewPager.isVisible = user != null
                     if (user != null) {
                         bindUserData(user)
-                    }
-                    state.errorMessage?.let { message ->
-                        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
-                        viewModel.consumeError()
                     }
                 }
             }

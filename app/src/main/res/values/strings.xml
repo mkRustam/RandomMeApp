@@ -27,6 +27,12 @@
     <string name="tab_personal">Personal</string>
     <string name="tab_location">Location</string>
     <string name="tab_login">Login</string>
+    <string name="error_dialog_title">Error</string>
+    <string name="error_dialog_button_ok">OK</string>
+    <string name="error_loading_users">Error while loading users</string>
+    <string name="error_adding_user">Error while adding user</string>
+    <string name="error_loading_user_details">Error while loading user details</string>
+    <string name="error_generating_user">Error while generating user</string>
 
     <string-array name="genders">
         <item>Male</item>

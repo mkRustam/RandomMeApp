@@ -3,6 +3,8 @@ package com.mkr.randomuser.presentation.ui.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mkr.randomuser.core.common.Resource
+import com.mkr.randomuser.core.error.ErrorContext
+import com.mkr.randomuser.core.error.ErrorHandler
 import com.mkr.randomuser.domain.usecase.GetRandomUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -15,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val getRandomUserUseCase: GetRandomUserUseCase
+    private val getRandomUserUseCase: GetRandomUserUseCase,
+    private val errorHandler: ErrorHandler
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -25,30 +28,28 @@ class MainViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     fun onGenerateUserClicked(gender: String, nat: String) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        viewModelScope.launch(errorHandler.exceptionHandler) {
+            _uiState.update { it.copy(isLoading = true) }
             try {
                 when (val result = getRandomUserUseCase(gender, nat)) {
                     is Resource.Success -> _events.send(MainEvent.NavigateToUserList)
-                    is Resource.Error -> _uiState.update {
-                        it.copy(errorMessage = result.message.ifBlank { "Something went wrong" })
+                    is Resource.Error -> {
+                        val errorMessage = result.message.ifBlank { ErrorContext.GENERATING_USER }
+                        errorHandler.handleError(errorMessage)
                     }
                     Resource.Loading -> Unit
                 }
+            } catch (e: Exception) {
+                errorHandler.handleError(e, ErrorContext.GENERATING_USER)
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
-
-    fun consumeError() {
-        _uiState.update { it.copy(errorMessage = null) }
-    }
 }
 
 data class MainUiState(
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val isLoading: Boolean = false
 )
 
 sealed interface MainEvent {
